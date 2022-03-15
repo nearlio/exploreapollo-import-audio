@@ -68,7 +68,7 @@ def checkMoments(momentDict):
 
 	return goodToUpload
 		
-_CSV_REQUIRED_FIELDS = ['Title', 'met_start', 'met_end', 'Transcript Files', 'Details', 'Mission_id']
+_CSV_REQUIRED_FIELDS = ['Title', 'met_start', 'met_end', 'Transcript Files', 'Details']
 def validate_csv(reader):
 	"""
 		takes a DictReader object pointing to our csv file and validates the entries.
@@ -114,10 +114,23 @@ def validate_csv(reader):
 		transcriptFile = row['Transcript Files'] = row['Transcript Files'].strip()
 		audioFile = row['Audio Files'] = row['Audio Files'].strip()
 		details = row['Details'] = row['Details'].strip()
-		mission_id = row['Mission_id'] = row['Mission_id'].strip()
 
 		if(title == 'Description' or title == 'description'): #just the story description, save and move on
 			storyDescription = details
+			continue
+
+		if(title == 'Mission_id'): #assigned mission_id that the story belongs to
+
+			mission_id = details
+
+			#checks mission_id is an integer (or even present tbh)
+			try:
+				mission_id = int(mission_id)
+			except ValueError:
+				rowValid = False
+				print("CSV: Given Mission ID for story is either missing or not a number" % (lineNo+1))
+				mission_id = None
+
 			continue
 
 		#this is just input validation
@@ -133,9 +146,6 @@ def validate_csv(reader):
 		if(details == ''):
 			rowValid = False
 			print("CSV: Empty Details field found in line %d" % (lineNo+1))
-		if(mission_id == ''):
-			rowValid = False
-			print("CSV: Empty Mission_id field found in line %d" % (lineNo+1))
 
 		#checks met_start and met_end are numbers, then checks if met_start is > 0 and less than met_end.
 		try:
@@ -159,14 +169,6 @@ def validate_csv(reader):
  			if met_end < met_start:
  				print("CSV: met_end is less than met_start on row %d" % (lineNo+1))
  				rowValid = False
-
-		#checks mission_id is an integer
-		try:
- 			mission_id = int(mission_id)
-		except ValueError:
-			rowValid = False
-			print("CSV: Given Mission ID on line %d is not a number" % (lineNo+1))
-			mission_id = None
 
 		if rowValid:
  			row['canUpload'] = True
