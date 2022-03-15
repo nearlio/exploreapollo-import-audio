@@ -68,7 +68,7 @@ def checkMoments(momentDict):
 
 	return goodToUpload
 		
-_CSV_REQUIRED_FIELDS = ['Title', 'met_start', 'met_end', 'Transcript Files', 'Details']
+_CSV_REQUIRED_FIELDS = ['Title', 'met_start', 'met_end', 'Transcript Files', 'Details', 'Mission_id']
 def validate_csv(reader):
 	"""
 		takes a DictReader object pointing to our csv file and validates the entries.
@@ -114,11 +114,13 @@ def validate_csv(reader):
 		transcriptFile = row['Transcript Files'] = row['Transcript Files'].strip()
 		audioFile = row['Audio Files'] = row['Audio Files'].strip()
 		details = row['Details'] = row['Details'].strip()
+		mission_id = row['Mission_id'] = row['Mission_id'].strip()
 
 		if(title == 'Description' or title == 'description'): #just the story description, save and move on
 			storyDescription = details
 			continue
 
+		#this is just input validation
 		if(title == ''):
 			rowValid = False
 			print("CSV: Empty Title field found in line %d" % (lineNo+1))
@@ -131,7 +133,11 @@ def validate_csv(reader):
 		if(details == ''):
 			rowValid = False
 			print("CSV: Empty Details field found in line %d" % (lineNo+1))
+		if(mission_id == ''):
+			rowValid = False
+			print("CSV: Empty Mission_id field found in line %d" % (lineNo+1))
 
+		#checks met_start and met_end are numbers, then checks if met_start is > 0 and less than met_end.
 		try:
 			met_start = int(met_start)
 		except ValueError:
@@ -153,6 +159,14 @@ def validate_csv(reader):
  			if met_end < met_start:
  				print("CSV: met_end is less than met_start on row %d" % (lineNo+1))
  				rowValid = False
+
+		#checks mission_id is an integer
+		try:
+ 			mission_id = int(mission_id)
+		except ValueError:
+			rowValid = False
+			print("CSV: Given Mission ID on line %d is not a number" % (lineNo+1))
+			mission_id = None
 
 		if rowValid:
  			row['canUpload'] = True
@@ -197,7 +211,7 @@ elif(checkStory(storyTitle) == True and checkMoments(momentDict) == True): #if w
 	else: 
 		for title, moment in momentDict.items():
 			channelID = int(moment['Transcript Files'].split('_')[2][2:])
-			upload_moment(moment['Title'], moment['Details'], moment['met_start'], moment['met_end'], channelID, storyID, API_SERVER, API_SERVER_TOKEN)
+			upload_moment(moment['Title'], moment['Details'], moment['met_start'], moment['met_end'], moment['Mission_id'], channelID, storyID, API_SERVER, API_SERVER_TOKEN)
       
       
       
